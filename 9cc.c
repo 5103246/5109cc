@@ -7,32 +7,42 @@
 
 // トークン種類
 typedef enum {
-    TK_RESERVED,
-    TK_NUM,     
-    TK_EOF,   
+    TK_RESERVED, // 記号
+    TK_NUM,      // 整数
+    TK_EOF,      // 入力の終わり
 } TokenKind;
 
 typedef struct Token Token;
 
 // トークン型
 struct Token {
-    TokenKind kind;
-    Token *next;
-    int val;
-    char *str;
+    TokenKind kind; // トークンの型
+    Token *next;    // 次の入力トークン
+    int val;        // TK_NUMの場合、その数値
+    char *str;      // トークン文字列
 };
 
 // 着目トークン
 Token *token;
 
-// エラー関数
-void error(char *fmt, ...) {
+// 入力プログラム
+char *user_input;
+
+// エラー箇所を報告する
+void error_at(char *loc, char *fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
+
+    int pos = loc - user_input;
+    fprintf(stderr, "%s\n", user_input);
+    fprintf(stderr, "%*s", pos, " ");
+    fprintf(stderr, "^ ");
     vfprintf(stderr, fmt, ap);
+    fprintf(stderr, "\n");
     exit(1);
 }
 
+// 次のトークンが期待している記号のときは、トークンを一つ進めて真を返す。
 bool consume(char op) {
     if (token->kind != TK_RESERVED || token->str[0] != op) {
         return false;
@@ -41,16 +51,18 @@ bool consume(char op) {
     return true;
 }
 
+// 次のトークンが期待している記号のときは、トークンを一つ進める。
 void expect(char op) {
     if (token->kind != TK_RESERVED || token->str[0] != op) {
-        error("'%c'ではありません", op);
+        error_at(token->str, "記号ではありません");
     }
     token = token->next;
 }
 
+// 次のトークンが数値の場合、トークンを一つ進めて数値を返す。
 int expect_number() {
     if (token->kind != TK_NUM) {
-        error("数ではありません");
+        error_at(token->str, "数ではありません");
     }
     int val = token->val;
     token = token->next;
@@ -61,6 +73,7 @@ bool at_eof() {
     return token->kind == TK_EOF;
 }
 
+// 新しいトークンを作成してcurに繋げる
 Token *new_token(TokenKind kind, Token *cur, char *str) {
     Token *tok = calloc(1, sizeof(Token));
     tok->kind = kind;
@@ -69,6 +82,7 @@ Token *new_token(TokenKind kind, Token *cur, char *str) {
     return tok;
 }
 
+// 入力文字列pをトークナイズしてそれを返す
 Token *tokenize(char *p) {
     Token head;
     head.next = NULL;
@@ -91,7 +105,7 @@ Token *tokenize(char *p) {
             continue;
         }
 
-        error("トークナイズできません");
+        error_at(token->str, "トークナイズできません");
     }
 
     new_token(TK_EOF, cur, p);
@@ -103,7 +117,8 @@ int main(int argc, char **argv) {
     fprintf(stderr, "引数の個数が正しくありません\n");
     return 1;
   }
-
+  
+  user_input = argv[1];
   token = tokenize(argv[1]);
 
   printf(".intel_syntax noprefix\n");
