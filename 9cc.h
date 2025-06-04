@@ -11,6 +11,7 @@ typedef enum {
     TK_IDENT,    // 識別子
     TK_NUM,      // 整数
     TK_EOF,      // 入力の終わり
+   // TK_RETURN,   // return 
 } TokenKind;
 
 typedef struct Token Token;
@@ -31,6 +32,8 @@ void expect(char *op);
 int expect_number();
 bool at_eof();
 bool startswith(char *p, char *q);
+bool is_alpha(char c);
+bool is_alnum(char c);
 Token *new_token(TokenKind kind, Token *cur, char *str, int len);
 Token *tokenize(char *p);
 
@@ -76,3 +79,15 @@ Node *mul();
 Node *unary();
 Node *primary();
 void gen(Node *node);
+
+typedef struct LVar LVar;
+// ローカル変数の型
+struct LVar {
+    LVar *next;  // 次の変数かNULL
+    char *name;  // 変数名
+    int len;     // 名前の長さ
+    int offset;  // rbpからのオフセット 
+};
+
+// 変数名で検索し、見つからない場合はNULLを返す
+LVar *find_lvar(Token *tok);
