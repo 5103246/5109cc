@@ -44,6 +44,13 @@ Token *consume_ident() {
     return t;
 }
 
+bool consume_return() {
+    if (token->kind != TK_RETURN)
+        return false;
+    token = token->next;
+    return true;
+}
+
 // 次のトークンが期待している記号のときは、トークンを一つ進める。
 void expect(char *op) {
     if (token->kind != TK_RESERVED ||
@@ -102,12 +109,18 @@ Token *tokenize(char *p) {
             continue;
         }
 
+        if (strncmp(p, "return", 6) == 0 && !is_alnum(p[6])) {
+            cur = new_token(TK_RETURN, cur, p, 6);
+            p += 6;
+            continue;
+        }
+
         if (startswith(p, "==") || startswith(p, "!=") ||
             startswith(p, "<=") || startswith(p, ">=")) {
-                cur = new_token(TK_RESERVED, cur, p, 2);
-                p += 2;
-                continue;
-            }
+            cur = new_token(TK_RESERVED, cur, p, 2);
+            p += 2;
+            continue;
+        }
 
         if (strchr("+-*/()<>;=", *p)) {
             cur = new_token(TK_RESERVED, cur, p++, 1);
