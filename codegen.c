@@ -71,14 +71,17 @@ void gen(Node *node) {
     case ND_FOR: {
         int seq = labelseq++;
 
-        gen(node->init);
+        if (node->init)
+            gen(node->init);
         printf(".Lbegin%d:\n", seq);
-        gen(node->cond);
+        if (node->cond)
+            gen(node->cond);
         printf("  pop rax\n");
         printf("  cmp rax, 0\n");
         printf("  je .Lend%d\n", seq);
         gen(node->then);
-        gen(node->inc);
+        if (node->inc)
+            gen(node->inc);
         printf("  jmp .Lbegin%d\n", seq);
         printf(".Lend%d:\n", seq);
         return;
@@ -93,6 +96,10 @@ void gen(Node *node) {
         printf("  mov rsp, rbp\n");
         printf("  pop rbp\n");
         printf("  ret\n");
+        return;
+    case ND_FUNCALL:
+        printf("  call %s\n", node->funcname);
+        printf("  push rax\n");
         return;
     }
 

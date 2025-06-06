@@ -43,6 +43,17 @@ extern Token *token;
 // 入力プログラム
 extern char *user_input;
 
+typedef struct LVar LVar;
+// ローカル変数の型
+struct LVar {
+    LVar *next;  // 次の変数かNULL
+    char *name;  // 変数名
+    int len;     // 名前の長さ
+    int offset;  // rbpからのオフセット 
+};
+
+LVar *find_lvar(Token *tok);
+
 typedef enum {
     ND_ADD, // +
     ND_SUB, // -
@@ -53,13 +64,14 @@ typedef enum {
     ND_LT,  // <
     ND_LE,  // <=
     ND_ASSIGN, // =
-    ND_LVAR, // ローカル変数
+    ND_LVAR, // local variable
     ND_NUM, // Integer
     ND_RETURN, // "return"
     ND_IF,        // "if"
     ND_WHILE,     // "while"
     ND_FOR,       // "for"
     ND_BLOCK,     // { ... }
+    ND_FUNCALL,   // Function call
 } NodeKind;
 
 typedef struct Node Node;
@@ -80,6 +92,9 @@ struct Node {
 
     // Block 
     Node *body;
+
+    // Fuction call
+    char *funcname;
 };
 
 extern Node *code[100];
@@ -97,14 +112,11 @@ Node *unary();
 Node *primary();
 void gen(Node *node);
 
-typedef struct LVar LVar;
-// ローカル変数の型
-struct LVar {
-    LVar *next;  // 次の変数かNULL
-    char *name;  // 変数名
-    int len;     // 名前の長さ
-    int offset;  // rbpからのオフセット 
+typedef struct Function Fuction;
+struct Fuction {
+    Fuction *next;
+    char *name;
+    Node *node;
+    LVar *locals;
+    int stack_size;
 };
-
-// 変数名で検索し、見つからない場合はNULLを返す
-LVar *find_lvar(Token *tok);

@@ -9,6 +9,13 @@ LVar *find_lvar(Token *tok) {
     return NULL;
 }
 
+char *copy_token_str(Token *tok) {
+    char *buf = calloc(tok->len + 1, 1);
+    memcpy(buf, tok->str, tok->len);
+    buf[tok->len] = '\0';
+    return buf;
+}
+
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs) {
     Node *node = calloc(1, sizeof(Node));
     node->kind = kind;
@@ -202,6 +209,13 @@ Node *primary() {
 
     Token *tok = consume_ident();
     if (tok) {
+        if (consume("(")) {
+            Node *node = calloc(1, sizeof(Node));
+            node->kind = ND_FUNCALL;
+            node->funcname = copy_token_str(tok);
+            expect(")");
+            return node;
+        }
         Node *node = calloc(1, sizeof(Node));
         node->kind = ND_LVAR;
         
