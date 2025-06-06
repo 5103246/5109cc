@@ -44,9 +44,12 @@ Token *consume_ident() {
     return t;
 }
 
-bool consume_return() {
-    if (token->kind != TK_RETURN)
+bool consume_keyword(char *op) {
+    if (token->kind != TK_KEYWORD ||
+        strlen(op) != token->len ||
+        memcmp(token->str, op, token->len)) {
         return false;
+    }
     token = token->next;
     return true;
 }
@@ -97,6 +100,17 @@ bool is_alnum(char c) {
     return is_alpha(c) || ('0' <= c && c <= '9');
 }
 
+char *starts_with_reserved(char *p) {
+    static char *kw[] = {"return", "if" , "else"};
+
+    for (int i = 0; i < sizeof(kw) / sizeof(*kw); i++) {
+        int len = strlen(kw[i]);
+        if (startswith(p, kw[i]) && !is_alnum(p[len]))
+            return kw[i];
+    }
+    return NULL;
+}
+
 // 入力文字列pをトークナイズしてそれを返す
 Token *tokenize(char *p) {
     Token head;
@@ -109,9 +123,12 @@ Token *tokenize(char *p) {
             continue;
         }
 
-        if (strncmp(p, "return", 6) == 0 && !is_alnum(p[6])) {
-            cur = new_token(TK_RETURN, cur, p, 6);
-            p += 6;
+        // Keyword
+        char *kw = starts_with_reserved(p);
+        if (kw) {
+            int len = strlen(kw);
+            cur = new_token(TK_KEYWORD, cur, p, len);
+            p += len;
             continue;
         }
 

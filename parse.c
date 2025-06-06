@@ -46,14 +46,28 @@ void program() {
 
 Node *stmt() {
     Node *node;
-    
-    if (consume_return()) {
+
+    if (consume_keyword("return")) {
         node = calloc(1, sizeof(Node));
         node->kind = ND_RETURN;
         node->lhs = expr();
-    } else {
-        node = expr();
+        expect(";");
+        return node;
     }
+
+    if (consume_keyword("if")) {
+        node = calloc(1, sizeof(Node));
+        node->kind = ND_IF;
+        expect("(");
+        node->cond = expr();
+        expect(")");
+        node->then = stmt();
+        if (consume_keyword("else")) 
+            node->els = stmt();
+        return node;
+    }
+
+    node = expr();
     expect(";");
     return node;
 }
