@@ -55,22 +55,31 @@ typedef enum {
     ND_ASSIGN, // =
     ND_LVAR, // ローカル変数
     ND_NUM, // Integer
-    ND_RETURN, // return
-    ND_IF, // "if"
+    ND_RETURN, // "return"
+    ND_IF,        // "if"
+    ND_WHILE,     // "while"
+    ND_FOR,       // "for"
+    ND_BLOCK,     // { ... }
 } NodeKind;
 
 typedef struct Node Node;
 struct Node {
     NodeKind kind; // ノードの型
+    Node *next;    // 次のノード
     Node *lhs;     // 左辺
     Node *rhs;     // 右辺
     int val;       // ND_NUMの場合使用
     int offset;    // ND_LVARの場合使用
 
-    // "if"
+    // "if", "while" or "for"
     Node *cond;
     Node *then;
     Node *els;  
+    Node *init;
+    Node *inc;
+
+    // Block 
+    Node *body;
 };
 
 extern Node *code[100];

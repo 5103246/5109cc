@@ -67,6 +67,52 @@ Node *stmt() {
         return node;
     }
 
+    if (consume_keyword("while")) {
+        node = calloc(1, sizeof(Node));
+        node->kind = ND_WHILE;
+        expect("(");
+        node->cond = expr();
+        expect(")");
+        node->then = stmt();
+        return node;
+    }
+
+    if (consume_keyword("for")) {
+        node = calloc(1, sizeof(Node));
+        node->kind = ND_FOR;
+        expect("(");
+
+        if (!consume(";")) {
+            node->init = expr();
+            expect(";");
+        }
+        if (!consume(";")) {
+            node->cond = expr();
+            expect(";");
+        }
+        if(!consume(")")) {
+            node->inc = expr();
+            expect(")");
+        }
+        node->then = stmt();
+        return node;
+    }
+
+    if (consume("{")) {
+        Node head;
+        head.next = NULL;
+        Node *cur = &head;
+
+        while (!consume("}")) {
+            cur->next = stmt();
+            cur = cur->next;
+        }
+        node = calloc(1, sizeof(Node));
+        node->kind = ND_BLOCK;
+        node->body = head.next;
+        return node;
+    }
+
     node = expr();
     expect(";");
     return node;
