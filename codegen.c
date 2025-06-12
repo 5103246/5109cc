@@ -5,12 +5,13 @@ int labelseq = 1;
 void gen(Node *node);
 
 void gen_lval(Node *node) {
-    if (node->kind != ND_LVAR)
+    if (node->kind != ND_VAR)
         error("代入の左辺値が変数ではありません");
 
-        printf("  mov rax, rbp\n");
-        printf("  sub rax, %d\n", node->offset);
-        printf("  push rax\n");
+    Var *var = node->var;
+    printf("  mov rax, rbp\n");
+    printf("  sub rax, %d\n", var->offset);
+    printf("  push rax\n");
 }
 
 void gen(Node *node) {
@@ -18,7 +19,7 @@ void gen(Node *node) {
     case ND_NUM:
         printf("  push %d\n", node->val);
         return;
-    case ND_LVAR:
+    case ND_VAR:
         gen_lval(node);
         printf("  pop rax\n");
         printf("  mov rax, [rax]\n");

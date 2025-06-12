@@ -5,23 +5,27 @@
 #include <stdlib.h>
 #include <string.h>
 
-// トークン種類
+//
+// tokenize.c
+//
+
+// Token 
 typedef enum {
-    TK_RESERVED, // 記号
-    TK_IDENT,    // 識別子
-    TK_NUM,      // 整数
-    TK_EOF,      // 入力の終わり
+    TK_RESERVED, // Keywords or punctuators
+    TK_IDENT,    // Identifiers
+    TK_NUM,      // Integer literals
+    TK_EOF,      // End-of-file markers
     TK_KEYWORD,   // return, if, while, for
 } TokenKind;
 
+// Token type
 typedef struct Token Token;
-// トークン型
 struct Token {
-    TokenKind kind; // トークンの型
-    Token *next;    // 次の入力トークン
-    int val;        // TK_NUMの場合、その数値
-    char *str;      // トークン文字列
-    int len;        // トークンの長さ
+    TokenKind kind; // Token kind
+    Token *next;    // Next Token
+    int val;        // If kind is TK_NUM, use val
+    char *str;      // Token string
+    int len;        // Token length
 };
 
 void error(char *fmt, ...);
@@ -38,22 +42,25 @@ bool is_alnum(char c);
 Token *new_token(TokenKind kind, Token *cur, char *str, int len);
 Token *tokenize(char *p);
 
-// 着目トークン
 extern Token *token;
-// 入力プログラム
 extern char *user_input;
 
-typedef struct LVar LVar;
-// ローカル変数の型
-struct LVar {
-    LVar *next;  // 次の変数かNULL
-    char *name;  // 変数名
-    int len;     // 名前の長さ
-    int offset;  // rbpからのオフセット 
+//
+// parse.c
+//
+
+// Variable
+typedef struct Var Var;
+struct Var {
+    Var *next;   // Next variable or NULL
+    char *name;  // Variable name
+    int len;     // Name length
+    int offset;  // Offset from RBP 
 };
 
-LVar *find_lvar(Token *tok);
+Var *find_var(Token *tok);
 
+// Node
 typedef enum {
     ND_ADD, // +
     ND_SUB, // -
@@ -64,7 +71,7 @@ typedef enum {
     ND_LT,  // <
     ND_LE,  // <=
     ND_ASSIGN, // =
-    ND_LVAR, // local variable
+    ND_VAR, // Variable
     ND_NUM, // Integer
     ND_RETURN, // "return"
     ND_IF,        // "if"
@@ -74,14 +81,17 @@ typedef enum {
     ND_FUNCALL,   // Function call
 } NodeKind;
 
+// Node type
 typedef struct Node Node;
 struct Node {
-    NodeKind kind; // ノードの型
-    Node *next;    // 次のノード
-    Node *lhs;     // 左辺
-    Node *rhs;     // 右辺
-    int val;       // ND_NUMの場合使用
-    int offset;    // ND_LVARの場合使用
+    NodeKind kind; // Node kind
+    Node *next;    // Next node
+    Token *tok;    // Representative token
+    Node *lhs;     // Left-hand side
+    Node *rhs;     // Right-hand side
+    
+    int val;     
+    Var *var;
 
     // "if", "while" or "for"
     Node *cond;
@@ -99,7 +109,7 @@ struct Node {
 
 extern Node *code[100];
 
-Node *new_node(NodeKind kind, Node *lhs, Node *rhs);
+Node *new_node(NodeKind kind, Token *tok);
 void program();
 Node *stmt();
 Node *expr();
@@ -117,6 +127,6 @@ struct Fuction {
     Fuction *next;
     char *name;
     Node *node;
-    LVar *locals;
+    Var *locals;
     int stack_size;
 };
