@@ -218,6 +218,21 @@ Node *unary() {
     return primary();
 }
 
+// func-args = "(" (assign ("," assign)*)? ")"
+Node *func_args() {
+    if (consume(")"))
+        return NULL;
+
+    Node *head = assign();
+    Node *cur = head;
+    while (consume(",")) {
+        cur->next = assign();
+        cur = cur->next;
+    }
+    expect(")");
+    return head;
+}
+
 Node *primary() {
     Token *tok; 
 
@@ -232,7 +247,7 @@ Node *primary() {
         if (consume("(")) {
             Node *node = new_node(ND_FUNCALL, tok);
             node->funcname = copy_token_str(tok);
-            expect(")");
+            node->args = func_args();
             return node;
         }
 

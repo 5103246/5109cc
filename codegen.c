@@ -1,5 +1,7 @@
 #include "9cc.h"
 
+char *argreg[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
+
 int labelseq = 1;
 
 void gen(Node *node);
@@ -98,10 +100,20 @@ void gen(Node *node) {
         printf("  pop rbp\n");
         printf("  ret\n");
         return;
-    case ND_FUNCALL:
+    case ND_FUNCALL: {
+        int nargs = 0;
+        for (Node *arg = node->args; arg; arg = arg->next) {
+            gen(arg);
+            nargs++;
+        }
+
+        for (int i = nargs - 1; i >= 0; i--)
+            printf("  pop %s\n", argreg[i]);
+
         printf("  call %s\n", node->funcname);
         printf("  push rax\n");
         return;
+        }
     }
 
     gen(node->lhs);

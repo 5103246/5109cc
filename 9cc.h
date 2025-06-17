@@ -105,6 +105,7 @@ struct Node {
 
     // Fuction call
     char *funcname;
+    Node *args;
 };
 
 extern Node *code[100];
